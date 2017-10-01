@@ -1,13 +1,13 @@
 CC	= g++
-CFLAGS	= -std=c++11 -O2 -MMD -MP
-LDFLAGS	=
+CFLAGS	= -std=c++14 -O2 -Wall -MMD -MP
+LDFLAGS	= -pthread
 LIBS	=
 INCLUDE	= -I ./include
 SRC_DIR	= ./src
 OBJ_DIR	= ./build
 SOURCES	= $(shell ls $(SRC_DIR)/*.cpp)
 OBJS	= $(subst $(SRC_DIR),$(OBJ_DIR), $(SOURCES:.cpp=.o))
-TARGET	= MouseRun
+TARGET	= Fa3GMazeRunner
 DEPENDS	= $(OBJS:.o=.d)
 
 all: $(TARGET)
