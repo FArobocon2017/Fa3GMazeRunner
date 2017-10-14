@@ -105,7 +105,7 @@ private:
 	void calcDistances();
 
 	// 距離計算
-	double calcOneDistance(LightSensor::SensorAccessenum direction, int lumi);
+	double calcOneDistance(LightSensor::Sensor direction, int lumi);
 
 	// 光センサのキャリブレーション→距離計算の係数を求める
 	int getCoefficient();
