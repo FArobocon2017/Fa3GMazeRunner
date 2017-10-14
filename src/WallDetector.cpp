@@ -24,27 +24,27 @@ void WallDetector::initWallDetector()
 	ifstream ifs(".\\WallDetector.ini");
 
 	// 分割パラメタ取得
-	for (size_t i = 0; i < tag2::SensorAccessenum::Max; i++)
+	for (size_t i = 0; i < LightSensor::Sensor::Max; i++)
 	{
 		string str;
 		int num1, num2, num3, num4;
 		cout << str << ":" << num1 << " " << num2 << " " << num3 << " " << num4 << endl;
-		this->coeffDistanceDivision[tag2::SensorAccessenum::Left] = num1;
-		this->coeffDistanceDivision[tag2::SensorAccessenum::Forward1] = num2;
-		this->coeffDistanceDivision[tag2::SensorAccessenum::Forward2] = num3;
-		this->coeffDistanceDivision[tag2::SensorAccessenum::Right] = num4;
+		this->coeffDistanceDivision[LightSensor::Sensor::Left] = num1;
+		this->coeffDistanceDivision[LightSensor::Sensor::Forward1] = num2;
+		this->coeffDistanceDivision[LightSensor::Sensor::Forward2] = num3;
+		this->coeffDistanceDivision[LightSensor::Sensor::Right] = num4;
 	}
 
 	// 差分パラメタ取得
-	for (size_t i = 0; i < tag2::SensorAccessenum::Max; i++)
+	for (size_t i = 0; i < LightSensor::Sensor::Max; i++)
 	{
 		string str;
 		int num1, num2, num3, num4;
 		cout << str << ":" << num1 << " " << num2 << " " << num3 << " " << num4 << endl;
-		this->coeffDistanceSubtraction[tag2::SensorAccessenum::Left] = num1;
-		this->coeffDistanceSubtraction[tag2::SensorAccessenum::Forward1] = num2;
-		this->coeffDistanceSubtraction[tag2::SensorAccessenum::Forward2] = num3;
-		this->coeffDistanceSubtraction[tag2::SensorAccessenum::Right] = num4;
+		this->coeffDistanceSubtraction[LightSensor::Sensor::Left] = num1;
+		this->coeffDistanceSubtraction[LightSensor::Sensor::Forward1] = num2;
+		this->coeffDistanceSubtraction[LightSensor::Sensor::Forward2] = num3;
+		this->coeffDistanceSubtraction[LightSensor::Sensor::Right] = num4;
 	}
 	ifs.close();
 }
@@ -71,9 +71,15 @@ void WallDetector::startLightSensor()
 	}
 }
 
-// 現在の壁情報を返す
+// 現在の壁情報を返す(Minimum構造)
 WallDetector::Wall WallDetector::chkWall()
 {
+	// 距離計測
+	this->calcDistances();
+
+	// 壁情報の更新
+	this->updateWallInfo();
+
 	return this->wall;
 }
 
@@ -98,15 +104,17 @@ void WallDetector::calcDistances()
 	// 変数の初期化
 	int lumidata[4] = { 0 }; // 輝度値[4]
 	
-	this->getlumidata(lumidata);
+	// センサを1回作動
+	this->getlumidataOnce(lumidata);
+
 	// 各方向の距離を求める
-	this->distdata[tag1::WallDirectionenum::Left] = this->calcOneDistance(tag2::SensorAccessenum::Left, lumidata[tag2::SensorAccessenum::Left]);
-	this->distdata[tag1::WallDirectionenum::Right] = this->calcOneDistance(tag2::SensorAccessenum::Right, lumidata[tag2::SensorAccessenum::Right]);
-	this->distdata[tag1::WallDirectionenum::Forward] = this->calcOneDistance(tag2::SensorAccessenum::Forward1, lumidata[tag2::SensorAccessenum::Forward1]);
-	this->distdata[tag1::WallDirectionenum::Forward] += this->calcOneDistance(tag2::SensorAccessenum::Forward2, lumidata[tag2::SensorAccessenum::Forward2]);
+	this->distdata[WallDetection::Direction::Left] = this->calcOneDistance(LightSensor::Sensor::Left, lumidata[LightSensor::Sensor::Left]);
+	this->distdata[WallDetection::Direction::Right] = this->calcOneDistance(LightSensor::Sensor::Right, lumidata[LightSensor::Sensor::Right]);
+	this->distdata[WallDetection::Direction::Forward] = this->calcOneDistance(LightSensor::Sensor::Forward1, lumidata[LightSensor::Sensor::Forward1]);
+	this->distdata[WallDetection::Direction::Forward] += this->calcOneDistance(LightSensor::Sensor::Forward2, lumidata[LightSensor::Sensor::Forward2]);
 
 	// 前方は2回あるので、平均を求める
-	this->distdata[tag1::WallDirectionenum::Forward] /= 2;
+	this->distdata[WallDetection::Direction::Forward] /= 2;
 
 	if (this->isDebug)
 	{
@@ -114,15 +122,17 @@ void WallDetector::calcDistances()
 	}
 }
 
-// センサの取得値を返す
-void WallDetector::getlumidata(int lumidata[4]) {
+// センサの取得値を返す(1回計測を返す)
+void WallDetector::getlumidataOnce(int lumidata[4]) {
 	
-	// 取得データをそのまま返す
+	// センサ作動
 	get_sensor_sts(lumidata);
-	lumidata[tag2::SensorAccessenum::Left] = this->lumihistory[0].lumidata[tag2::SensorAccessenum::Left];
-	lumidata[tag2::SensorAccessenum::Right] = this->lumihistory[0].lumidata[tag2::SensorAccessenum::Right];
-	lumidata[tag2::SensorAccessenum::Forward1] = this->lumihistory[0].lumidata[tag2::SensorAccessenum::Forward1];
-	lumidata[tag2::SensorAccessenum::Forward2] = this->lumihistory[0].lumidata[tag2::SensorAccessenum::Forward2];
+
+	// 取得データをそのまま返す
+	lumidata[LightSensor::Sensor::Left] = this->lumihistory[0].lumidata[LightSensor::Sensor::Left];
+	lumidata[LightSensor::Sensor::Right] = this->lumihistory[0].lumidata[LightSensor::Sensor::Right];
+	lumidata[LightSensor::Sensor::Forward1] = this->lumihistory[0].lumidata[LightSensor::Sensor::Forward1];
+	lumidata[LightSensor::Sensor::Forward2] = this->lumihistory[0].lumidata[LightSensor::Sensor::Forward2];
 }
 
 
@@ -141,7 +151,7 @@ void get_sensor_sts2(int* lumidata) {
 }
 
 // 距離計算(1つ)
-double WallDetector::calcOneDistance(tag2::SensorAccessenum direction, int lumi)
+double WallDetector::calcOneDistance(LightSensor::Sensor direction, int lumi)
 {
 	double dist = 0;
 	double coeffSub = this->coeffDistanceSubtraction[direction];
@@ -155,7 +165,7 @@ double WallDetector::calcOneDistance(tag2::SensorAccessenum direction, int lumi)
 // 壁情報の更新
 void WallDetector::updateWallInfo()
 {
-	for (int i = 0; i < tag1::WallDirectionenum::Max; i++)
+	for (int i = 0; i < WallDetection::Direction::Max; i++)
 	{
 		if (this->distdata[i] < this->wallDetectThreshold)
 		{
@@ -173,10 +183,10 @@ void WallDetector::updateWallInfo()
 void WallDetector::writeDistancefromEachSensor()
 {
 	ofstream ofs("dist_history.txt", ios::app);
-	ofs << this->distdata[tag2::SensorAccessenum::Left] << " ";
-	ofs << this->distdata[tag2::SensorAccessenum::Forward1] << " ";
-	ofs << this->distdata[tag2::SensorAccessenum::Forward2] << " ";
-	ofs << this->distdata[tag2::SensorAccessenum::Right] << endl;
+	ofs << this->distdata[LightSensor::Sensor::Left] << " ";
+	ofs << this->distdata[LightSensor::Sensor::Forward1] << " ";
+	ofs << this->distdata[LightSensor::Sensor::Forward2] << " ";
+	ofs << this->distdata[LightSensor::Sensor::Right] << endl;
 	ofs.close();
 }
 
@@ -184,10 +194,10 @@ void WallDetector::writeDistancefromEachSensor()
 void WallDetector::writeLightfromEachSensor()
 {
 	ofstream ofs("dist_history.txt", ios::app);
-	ofs << this->distdata[tag2::SensorAccessenum::Left] << " ";
-	ofs << this->distdata[tag2::SensorAccessenum::Forward1] << " ";
-	ofs << this->distdata[tag2::SensorAccessenum::Forward2] << " ";
-	ofs << this->distdata[tag2::SensorAccessenum::Right] << endl;
+	ofs << this->distdata[LightSensor::Sensor::Left] << " ";
+	ofs << this->distdata[LightSensor::Sensor::Forward1] << " ";
+	ofs << this->distdata[LightSensor::Sensor::Forward2] << " ";
+	ofs << this->distdata[LightSensor::Sensor::Right] << endl;
 	ofs.close();
 }
 

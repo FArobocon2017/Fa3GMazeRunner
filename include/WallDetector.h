@@ -5,8 +5,8 @@ class WallDetector
 public:
 
 	// 方向ごとの壁情報の参照方法
-	struct tag1{
-	enum WallDirectionenum
+	struct WallDetection{
+	enum Direction
 	{
 		Left = 0,
 		Forward,
@@ -46,8 +46,8 @@ public:
 private:
 
 	// センサの参照方法
-	struct tag2{
-	enum SensorAccessenum
+	struct LightSensor{
+	enum Sensor
 	{
 		Left = 0,
 		Forward1,
@@ -105,13 +105,13 @@ private:
 	void calcDistances();
 
 	// 距離計算
-	double calcOneDistance(tag2::SensorAccessenum direction, int lumi);
+	double calcOneDistance(LightSensor::SensorAccessenum direction, int lumi);
 
 	// 光センサのキャリブレーション→距離計算の係数を求める
 	int getCoefficient();
 
-	// センサの取得値を返す
-	void getlumidata(int lumidata[4]);
+	// センサの取得値を返す(1回計測を返す)
+	void getlumidataOnce(int lumidata[4]);
 
 	// 壁センサクラスの初期化
 	void initWallDetector();
